@@ -8,9 +8,23 @@ import (
 	"time"
 )
 
+// countWriter wraps an io.Writer and counts total bytes written.
+type countWriter struct {
+	w io.Writer
+	n int64
+}
+
+func (c *countWriter) Write(p []byte) (int, error) {
+	n, err := c.w.Write(p)
+	c.n += int64(n)
+	return n, err
+}
+
 // WriteTo writes the formatted latency report to w.
 // This produces the pretty-printed CLI table shown after every build.
-func (t *Tracker) WriteTo(w io.Writer) error {
+// Implements io.WriterTo.
+func (t *Tracker) WriteTo(w io.Writer) (int64, error) {
+	cw := &countWriter{w: w}
 	const (
 		colPhase = 22
 		colVal   = 10
@@ -18,25 +32,25 @@ func (t *Tracker) WriteTo(w io.Writer) error {
 
 	totalDur := t.BuildDuration()
 
-	fmt.Fprintf(w, "\n✅ Build completed in %s\n\n", formatDuration(totalDur))
+	fmt.Fprintf(cw, "\n✅ Build completed in %s\n\n", formatDuration(totalDur))
 
 	// Header
 	line := strings.Repeat("─", colPhase+colVal*4+5)
-	fmt.Fprintf(w, "┌%s┐\n", line)
-	fmt.Fprintf(w, "│%s│\n", center("LATENCY BREAKDOWN", colPhase+colVal*4+5))
-	fmt.Fprintf(w, "├%s┬%s┬%s┬%s┬%s┤\n",
+	fmt.Fprintf(cw, "┌%s┐\n", line)
+	fmt.Fprintf(cw, "│%s│\n", center("LATENCY BREAKDOWN", colPhase+colVal*4+5))
+	fmt.Fprintf(cw, "├%s┬%s┬%s┬%s┬%s┤\n",
 		strings.Repeat("─", colPhase),
 		strings.Repeat("─", colVal),
 		strings.Repeat("─", colVal),
 		strings.Repeat("─", colVal),
 		strings.Repeat("─", colVal))
-	fmt.Fprintf(w, "│%-*s│%*s│%*s│%*s│%*s│\n",
+	fmt.Fprintf(cw, "│%-*s│%*s│%*s│%*s│%*s│\n",
 		colPhase, " Phase",
 		colVal, "Avg ",
 		colVal, "p50 ",
 		colVal, "p95 ",
 		colVal, "p99 ")
-	fmt.Fprintf(w, "├%s┼%s┼%s┼%s┼%s┤\n",
+	fmt.Fprintf(cw, "├%s┼%s┼%s┼%s┼%s┤\n",
 		strings.Repeat("─", colPhase),
 		strings.Repeat("─", colVal),
 		strings.Repeat("─", colVal),
@@ -49,7 +63,7 @@ func (t *Tracker) WriteTo(w io.Writer) error {
 		if stats == nil {
 			continue
 		}
-		fmt.Fprintf(w, "│ %-*s│%*s│%*s│%*s│%*s│\n",
+		fmt.Fprintf(cw, "│ %-*s│%*s│%*s│%*s│%*s│\n",
 			colPhase-1, truncate(name, colPhase-2),
 			colVal, formatDuration(stats.Avg)+" ",
 			colVal, formatDuration(stats.P50)+" ",
@@ -68,7 +82,7 @@ func (t *Tracker) WriteTo(w io.Writer) error {
 				prefix = "└─"
 			}
 			label := fmt.Sprintf("  %s %s", prefix, subName)
-			fmt.Fprintf(w, "│ %-*s│%*s│%*s│%*s│%*s│\n",
+			fmt.Fprintf(cw, "│ %-*s│%*s│%*s│%*s│%*s│\n",
 				colPhase-1, truncate(label, colPhase-2),
 				colVal, formatDuration(subStats.Avg)+" ",
 				colVal, formatDuration(subStats.P50)+" ",
@@ -78,19 +92,19 @@ func (t *Tracker) WriteTo(w io.Writer) error {
 	}
 
 	// Total row
-	fmt.Fprintf(w, "│%s┼%s┼%s┼%s┼%s│\n",
+	fmt.Fprintf(cw, "│%s┼%s┼%s┼%s┼%s│\n",
 		" "+strings.Repeat("─", colPhase-1),
 		strings.Repeat("─", colVal),
 		strings.Repeat("─", colVal),
 		strings.Repeat("─", colVal),
 		strings.Repeat("─", colVal))
-	fmt.Fprintf(w, "│ %-*s│%*s│%*s│%*s│%*s│\n",
+	fmt.Fprintf(cw, "│ %-*s│%*s│%*s│%*s│%*s│\n",
 		colPhase-1, "Total",
 		colVal, formatDuration(totalDur)+" ",
 		colVal, "- ",
 		colVal, "- ",
 		colVal, "- ")
-	fmt.Fprintf(w, "└%s┴%s┴%s┴%s┴%s┘\n",
+	fmt.Fprintf(cw, "└%s┴%s┴%s┴%s┴%s┘\n",
 		strings.Repeat("─", colPhase),
 		strings.Repeat("─", colVal),
 		strings.Repeat("─", colVal),
@@ -104,10 +118,10 @@ func (t *Tracker) WriteTo(w io.Writer) error {
 	maxPauseMs := float64(endMem.MaxPauseNs) / 1e6
 	allocs := endMem.NumAllocs - startMem.NumAllocs
 
-	fmt.Fprintf(w, "\nMemory: peak=%.0fMB, allocs=%d, GC pauses=%d (max %.1fms)\n",
+	fmt.Fprintf(cw, "\nMemory: peak=%.0fMB, allocs=%d, GC pauses=%d (max %.1fms)\n",
 		peakMB, allocs, gcCount, maxPauseMs)
 
-	return nil
+	return cw.n, nil
 }
 
 // WriteJSON writes metrics as JSON to the given writer, suitable for
@@ -231,13 +245,13 @@ func truncate(s string, maxLen int) string {
 // NoopTracker is a no-op implementation of MetricsTracker.
 type NoopTracker struct{}
 
-func (NoopTracker) StartPhase(string)            {}
-func (NoopTracker) EndPhase(string)              {}
-func (NoopTracker) StartSubPhase(string, string) {}
-func (NoopTracker) EndSubPhase(string, string)   {}
-func (NoopTracker) RecordAlloc()                 {}
-func (NoopTracker) WriteTo(io.Writer) error      { return nil }
-func (NoopTracker) WriteJSON(io.Writer) error    { return nil }
+func (NoopTracker) StartPhase(string)                {}
+func (NoopTracker) EndPhase(string)                  {}
+func (NoopTracker) StartSubPhase(string, string)     {}
+func (NoopTracker) EndSubPhase(string, string)       {}
+func (NoopTracker) RecordAlloc()                     {}
+func (NoopTracker) WriteTo(io.Writer) (int64, error) { return 0, nil }
+func (NoopTracker) WriteJSON(io.Writer) error        { return nil }
 
 // ---------------------------------------------------------------------------
 // Bench helper — run build function N times and aggregate metrics

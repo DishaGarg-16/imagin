@@ -16,34 +16,34 @@ import (
 type InstructionType string
 
 const (
-	InstructionFrom       InstructionType = "FROM"
-	InstructionRun        InstructionType = "RUN"
-	InstructionCopy       InstructionType = "COPY"
-	InstructionAdd        InstructionType = "ADD"
-	InstructionCmd        InstructionType = "CMD"
-	InstructionEntrypoint InstructionType = "ENTRYPOINT"
-	InstructionEnv        InstructionType = "ENV"
-	InstructionExpose     InstructionType = "EXPOSE"
-	InstructionVolume     InstructionType = "VOLUME"
-	InstructionWorkdir    InstructionType = "WORKDIR"
-	InstructionUser       InstructionType = "USER"
-	InstructionArg        InstructionType = "ARG"
-	InstructionLabel      InstructionType = "LABEL"
-	InstructionShell      InstructionType = "SHELL"
-	InstructionStopsignal InstructionType = "STOPSIGNAL"
+	InstructionFrom        InstructionType = "FROM"
+	InstructionRun         InstructionType = "RUN"
+	InstructionCopy        InstructionType = "COPY"
+	InstructionAdd         InstructionType = "ADD"
+	InstructionCmd         InstructionType = "CMD"
+	InstructionEntrypoint  InstructionType = "ENTRYPOINT"
+	InstructionEnv         InstructionType = "ENV"
+	InstructionExpose      InstructionType = "EXPOSE"
+	InstructionVolume      InstructionType = "VOLUME"
+	InstructionWorkdir     InstructionType = "WORKDIR"
+	InstructionUser        InstructionType = "USER"
+	InstructionArg         InstructionType = "ARG"
+	InstructionLabel       InstructionType = "LABEL"
+	InstructionShell       InstructionType = "SHELL"
+	InstructionStopsignal  InstructionType = "STOPSIGNAL"
 	InstructionHealthcheck InstructionType = "HEALTHCHECK"
-	InstructionOnbuild    InstructionType = "ONBUILD"
-	InstructionMaintainer InstructionType = "MAINTAINER"
+	InstructionOnbuild     InstructionType = "ONBUILD"
+	InstructionMaintainer  InstructionType = "MAINTAINER"
 )
 
 // Instruction represents a single parsed Dockerfile instruction.
 type Instruction struct {
-	Type    InstructionType // e.g. FROM, RUN, COPY
-	Args    []string        // positional arguments
-	Flags   map[string]string // e.g. --from=builder, --chown=user
-	Raw     string          // original line text for cache key
-	Line    int             // 1-based line number in Dockerfile
-	Stage   int             // build stage index (incremented at each FROM)
+	Type  InstructionType   // e.g. FROM, RUN, COPY
+	Args  []string          // positional arguments
+	Flags map[string]string // e.g. --from=builder, --chown=user
+	Raw   string            // original line text for cache key
+	Line  int               // 1-based line number in Dockerfile
+	Stage int               // build stage index (incremented at each FROM)
 }
 
 // BuildStage represents one FROM ... block in a multi-stage Dockerfile.
@@ -57,7 +57,7 @@ type BuildStage struct {
 
 // Dockerfile is the fully parsed representation of a Dockerfile.
 type Dockerfile struct {
-	Stages   []BuildStage  // build stages in order
+	Stages     []BuildStage  // build stages in order
 	GlobalArgs []Instruction // ARG instructions before the first FROM
 }
 
@@ -83,26 +83,26 @@ type Layer struct {
 // ImageConfig holds the runtime configuration for the built image.
 // This maps to the OCI Image Configuration specification.
 type ImageConfig struct {
-	Architecture string            `json:"architecture"`
-	OS           string            `json:"os"`
-	Config       ContainerConfig   `json:"config"`
-	RootFS       RootFSConfig      `json:"rootfs"`
-	History      []HistoryEntry    `json:"history"`
-	Created      time.Time         `json:"created"`
+	Architecture string          `json:"architecture"`
+	OS           string          `json:"os"`
+	Config       ContainerConfig `json:"config"`
+	RootFS       RootFSConfig    `json:"rootfs"`
+	History      []HistoryEntry  `json:"history"`
+	Created      time.Time       `json:"created"`
 }
 
 // ContainerConfig holds runtime-settable fields.
 type ContainerConfig struct {
-	Env          []string          `json:"Env,omitempty"`
-	Cmd          []string          `json:"Cmd,omitempty"`
-	Entrypoint   []string          `json:"Entrypoint,omitempty"`
-	WorkingDir   string            `json:"WorkingDir,omitempty"`
-	User         string            `json:"User,omitempty"`
+	Env          []string            `json:"Env,omitempty"`
+	Cmd          []string            `json:"Cmd,omitempty"`
+	Entrypoint   []string            `json:"Entrypoint,omitempty"`
+	WorkingDir   string              `json:"WorkingDir,omitempty"`
+	User         string              `json:"User,omitempty"`
 	ExposedPorts map[string]struct{} `json:"ExposedPorts,omitempty"`
 	Volumes      map[string]struct{} `json:"Volumes,omitempty"`
-	Labels       map[string]string `json:"Labels,omitempty"`
-	Shell        []string          `json:"Shell,omitempty"`
-	StopSignal   string            `json:"StopSignal,omitempty"`
+	Labels       map[string]string   `json:"Labels,omitempty"`
+	Shell        []string            `json:"Shell,omitempty"`
+	StopSignal   string              `json:"StopSignal,omitempty"`
 }
 
 // RootFSConfig describes the layer chain.
@@ -199,7 +199,8 @@ type MetricsTracker interface {
 	RecordAlloc()
 
 	// WriteTo writes the formatted report to the given writer.
-	WriteTo(w io.Writer) error
+	// Implements io.WriterTo.
+	WriteTo(w io.Writer) (int64, error)
 
 	// WriteJSON writes metrics as JSON to the given writer.
 	WriteJSON(w io.Writer) error

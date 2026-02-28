@@ -121,7 +121,7 @@ func TestReporterWriteTo(t *testing.T) {
 	tracker.RecordAlloc()
 
 	var buf bytes.Buffer
-	err := tracker.WriteTo(&buf)
+	_, err := tracker.WriteTo(&buf)
 	if err != nil {
 		t.Fatalf("WriteTo failed: %v", err)
 	}
