@@ -1,0 +1,40 @@
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace / module
+go.work
+go.work.sum
+
+# Build output
+/output/
+/imagin
+/imagin.exe
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS
+desktop.ini
+
+# Temporary / work dirs
+/tmp/
+*.tar.gz
+*.tar
+
+# Metrics output
+metrics.json
+
+# Build cache blobs (generated at runtime)
+/blobs/
