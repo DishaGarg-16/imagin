@@ -19,12 +19,18 @@ IMAGIN takes a Dockerfile, parses it, executes each instruction against a layere
 
 ## 🏗️ Architecture
 
-```
-Dockerfile → Parser → Executor → RootFS Manager → Snapshotter → OCI Exporter
-                         ↕              ↕               ↕
-                    Metadata Store   Buffer Pool    Digest (SHA-256)
-                         ↕
-                   Metrics Tracker
+```mermaid
+graph TD
+    CLI["CLI (main.go)"] --> P["Parser"]
+    P --> E["Executor"]
+    E --> R["RootFS Manager"]
+    E --> S["Snapshotter"]
+    E --> M["Metadata Store"]
+    E --> OCI["OCI Exporter"]
+    E --> MT["Metrics Tracker"]
+    S --> PP["Buffer Pool"]
+    S --> D["Digest (SHA-256)"]
+    R --> PP
 ```
 
 | Component | What It Does |
