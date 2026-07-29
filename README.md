@@ -1,4 +1,4 @@
-# IMAGIN 🐳⚡
+# IMAGIN
 
 **A Docker image builder written from scratch in Go, optimised for p95/p99 tail latency.**
 
@@ -6,7 +6,7 @@ IMAGIN takes a Dockerfile, parses it, executes each instruction against a layere
 
 ---
 
-## ✨ Features
+##  Features
 
 - **Full Dockerfile support** — FROM, RUN, COPY, ADD, ENV, WORKDIR, CMD, ENTRYPOINT, EXPOSE, VOLUME, USER, LABEL, SHELL, ARG, and more
 - **Multi-stage builds** — `FROM ... AS builder` + `COPY --from=builder`
@@ -17,7 +17,7 @@ IMAGIN takes a Dockerfile, parses it, executes each instruction against a layere
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```mermaid
 graph TD
@@ -102,7 +102,7 @@ Memory: peak=48MB, allocs=1,247, GC pauses=2 (max 1.2ms)
 
 ---
 
-## ⚡ Latency Optimisations
+##  Latency Optimisations
 
 IMAGIN is designed to minimise **tail latency** (p95/p99), not just average performance. Here's what we do:
 
@@ -157,7 +157,7 @@ IMAGIN/
 
 ---
 
-## 🧪 Running Tests
+##  Running Tests
 
 ```bash
 # Run all tests
@@ -172,9 +172,9 @@ go test -bench=. -benchmem github.com/imagin/imagin/pkg/parser github.com/imagin
 
 ---
 
-## 🧠 Concepts Explained
+##  Concepts Explained
 
-If you're building this to learn, here are the key concepts behind each component:
+Here are the key concepts behind each component:
 
 <details>
 <summary><b>Dockerfile Parser</b></summary>
@@ -226,7 +226,7 @@ Average latency hides outliers. If your average build is 2s but 1 in 100 takes 3
 
 ---
 
-## 📋 Platform Notes
+##  Platform Notes
 
 - **Full build execution** (RUN commands, OverlayFS mounts) requires **Linux** with appropriate privileges
 - **On Windows/macOS**: parser, metadata, exporter, metrics, and pool packages are fully functional. The executor uses a simulated RUN handler and copy-based rootfs fallback
