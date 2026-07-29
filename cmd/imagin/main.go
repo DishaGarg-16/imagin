@@ -150,11 +150,6 @@ func runBuild(ctx context.Context, dockerfilePath, contextDir, outputPath, forma
 	layers := store.GetLayers()
 	store.SetConfig(config)
 
-	var exp interface {
-		Export(ctx context.Context, config interface{}, layers interface{}, outputPath string) error
-	}
-	_ = exp // We'll use the concrete types below
-
 	switch format {
 	case "tar":
 		tarExp := exporter.NewTarExporter()

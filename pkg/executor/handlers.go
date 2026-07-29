@@ -87,7 +87,6 @@ func runInChroot(ctx context.Context, rootDir, workDir string, cmdArgs, env []st
 	}
 
 	cmd := exec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
-	cmd.Dir = workDir
 	cmd.Env = env
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

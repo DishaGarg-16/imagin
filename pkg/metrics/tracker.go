@@ -136,6 +136,8 @@ func (t *Tracker) RecordAlloc() {
 
 // BuildDuration returns total build time.
 func (t *Tracker) BuildDuration() time.Duration {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	return t.buildEnd.Sub(t.buildStart)
 }
 
@@ -152,18 +154,24 @@ func (t *Tracker) PhaseNames() []string {
 func (t *Tracker) PhaseStats(name string) *Stats {
 	t.mu.Lock()
 	pt, ok := t.phases[name]
-	t.mu.Unlock()
 	if !ok || len(pt.Durations) == 0 {
+		t.mu.Unlock()
 		return nil
 	}
-	return computeStats(pt.Durations)
+	durs := make([]time.Duration, len(pt.Durations))
+	copy(durs, pt.Durations)
+	t.mu.Unlock()
+	return computeStats(durs)
 }
 
 // SubPhaseNames returns sub-phase names for the given parent.
 func (t *Tracker) SubPhaseNames(parent string) []string {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	return t.subOrder[parent]
+	src := t.subOrder[parent]
+	out := make([]string, len(src))
+	copy(out, src)
+	return out
 }
 
 // SubPhaseStats returns stats for a specific sub-phase.
@@ -171,15 +179,20 @@ func (t *Tracker) SubPhaseStats(parent, name string) *Stats {
 	key := parent + "." + name
 	t.mu.Lock()
 	sp, ok := t.subPhases[key]
-	t.mu.Unlock()
 	if !ok || len(sp.Durations) == 0 {
+		t.mu.Unlock()
 		return nil
 	}
-	return computeStats(sp.Durations)
+	durs := make([]time.Duration, len(sp.Durations))
+	copy(durs, sp.Durations)
+	t.mu.Unlock()
+	return computeStats(durs)
 }
 
 // MemoryStats returns the memory delta between build start and end.
 func (t *Tracker) MemoryStats() (start, end MemSnapshot) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	return t.startMem, t.endMem
 }
 
